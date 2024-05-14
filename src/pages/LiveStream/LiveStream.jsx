@@ -87,7 +87,6 @@ const LiveStream = () => {
   // Kết nối tới máy chủ
 
   useEffect(() => {
-    console.log(new Date());
     const socket = io(host, {
       extraHeaders: {
         "x-authorization": token,
@@ -96,7 +95,7 @@ const LiveStream = () => {
     socket.once("connect", () => {
       const roomId = "livestream_664175a1e9ccd5d0e257549a"; // Thay roomId bằng roomId bạn nhận được từ server
       socket.emit("joinRoom", roomId);
-      console.log(new Date());
+
       console.log("Connected to server");
     });
     // socket.on("disconnect", () => {
@@ -111,28 +110,72 @@ const LiveStream = () => {
       setLivestreamData((prevData) => [...prevData, datas]);
     });
   }, []);
-  // console.log("data1", data1);
 
-  // useEffect(() => {
-  //   socket.on("livestreamToClient", (datas) => {
-  //     // console.log("Received livestream data:", data);
-  //     // Xử lý dữ liệu nhận được ở đây
-  //     console.log("data:", datas);
-
-  //     setLivestreamData((prevData) => [...prevData, datas]);
-  //   });
-  // }, []);
   const handleEnter = (e) => {
-    console.log(e.target.value); // Log giá trị khi nhấn Enter
+    const comment = {
+      livestream_id: "664175a1e9ccd5d0e257549a",
+      chat_content: e.target.value,
+    };
+    console.log(comment);
+    axios
+      .post(`https://api.windoo.vn/api/livestream/comment`, comment, {
+        headers: {
+          "X-Authorization": token,
+        },
+      })
+      .then((response) => {
+        console.log("Comment posted successfully:", response.data);
+        setInputValue(""); // Xóa nội dung trong input sau khi gửi
+      })
+      .catch((error) => {
+        console.error("Error posting comment:", error);
+        // Xử lý lỗi tại đây nếu cần
+      });
     setInputValue("");
-    const jsonArray = livestreamData.map((jsonString) =>
-      JSON.parse(jsonString)
-    );
-    console.log("list comment: ", jsonArray);
+  };
+  const handleClick = (value) => {
+    const comment = {
+      livestream_id: "664175a1e9ccd5d0e257549a",
+      chat_content: value,
+    };
+    console.log(comment);
+    axios
+      .post(`https://api.windoo.vn/api/livestream/comment`, comment, {
+        headers: {
+          "X-Authorization": token,
+        },
+      })
+      .then((response) => {
+        console.log("Comment posted successfully:", response.data);
+        setInputValue(""); // Xóa nội dung trong input sau khi gửi
+      })
+      .catch((error) => {
+        console.error("Error posting comment:", error);
+        // Xử lý lỗi tại đây nếu cần
+      });
+    setInputValue("");
   };
   const handleChange = (e) => {
     setInputValue(e.target.value); // Cập nhật giá trị trong biến state khi người dùng nhập vào Input
   };
+  // const createChatHistory = () => {
+  //   const newTextMessageToSend = JSON.stringify(listIDFile);
+  //   return axios
+  //     .post(
+  //       `https://api.windoo.vn/api/chat-history/create`,
+  //       newTextMessageToSend,
+  //       {
+  //         headers: {
+  //           "X-Authorization": token,
+  //         },
+  //       }
+  //     )
+  //     .then((response) => response.data)
+  //     .catch((error) => {
+  //       console.error("Error creating chat history:", error);
+  //       throw error;
+  //     });
+  // };
   return (
     <LiveStreamStyle>
       <div>
@@ -235,13 +278,13 @@ const LiveStream = () => {
                       {(item) => (
                         <List.Item key={item.user_email}>
                           <List.Item.Meta
-                            // avatar={<Avatar src={item.picture.large} />}
+                            avatar={<Avatar src={item.createBy.avatar} />}
                             title={
                               <a href="https://ant.design">
-                                {item.chat_content}
+                                {item.createBy.user_name}
                               </a>
                             }
-                            // description={item.email}
+                            description={item.chat_content}
                           />
                         </List.Item>
                       )}
@@ -256,7 +299,9 @@ const LiveStream = () => {
                     value={inputValue}
                     onPressEnter={handleEnter}
                     onChange={handleChange}
-                    suffix={<SendOutlined />}
+                    suffix={
+                      <SendOutlined onClick={() => handleClick(inputValue)} />
+                    }
                   />
                 </div>
               </div>
