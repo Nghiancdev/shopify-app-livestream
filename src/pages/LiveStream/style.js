@@ -63,3 +63,17 @@ export const ModalStyle = styled.div`
     }
   }
 `;
+export const ProductStyle = styled.div`
+  .product_container {
+    .product_containers {
+      border-top: 1px solid gray;
+      /* border-bottom: 0.1px solid gray; */
+      .product_container_item {
+        width: 100%;
+        padding: 10px;
+        display: grid;
+        grid-template-columns: 1fr 11fr 1fr;
+      }
+    }
+  }
+`;

@@ -1,33 +1,101 @@
 import React, { useEffect, useRef, useState } from "react";
-import { LiveStreamStyle, ModalStyle } from "./style";
-import { Avatar, List, message, Input, Modal } from "antd";
-import { SendOutlined, ShoppingCartOutlined } from "@ant-design/icons";
+import { LiveStreamStyle, ModalStyle, ProductStyle } from "./style";
+import {
+  Typography,
+  Avatar,
+  List,
+  message,
+  Input,
+  Modal,
+  Dropdown,
+  Checkbox,
+  Select,
+  Upload,
+} from "antd";
+import ImgCrop from "antd-img-crop";
+import {
+  SendOutlined,
+  ShoppingCartOutlined,
+  SmileOutlined,
+  PushpinOutlined,
+} from "@ant-design/icons";
 import VirtualList from "rc-virtual-list";
 import { io } from "socket.io-client";
 import axios from "axios";
-
-const fakeDataUrl =
-  "https://randomuser.me/api/?results=20&inc=name,gender,email,nat,picture&noinfo";
+import { useNavigate } from "react-router-dom";
+const { TextArea } = Input;
 const ContainerHeight = 296;
 const host = "https://socket.api.windoo.vn/socket";
-const token =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NDcxMDY4MTcsImRhdGEiOnsiX2lkIjoiNjYzZGZkOWM4NWUxNGE0MmM2NDkxMTBhIiwia2V5IjoiOWExYWEzYTcwZWNkMWZlNzQ3ZDhkZDhhOTdiY2U4MjYiLCJzaWduYXR1cmUiOiI4ZTdhOTkwZmYwOWM5MGUxYjEwZjI2YTQ1N2UxM2IzOCIsInNlc3Npb24iOiI2NjQxODg4MTQyZmQ4ZjJhMGJhZTk5NzIifSwiaWF0IjoxNzE1NTcwODE3fQ.Tw30oMbUSpW8owQRmmEmvnRXPTuPnjv3yuoR1dihzaY";
-
+const options = [
+  {
+    label: "Camera defaut",
+    value: "1",
+  },
+  {
+    label: "Camera 2",
+    value: "2",
+  },
+];
+const optionss = [
+  {
+    label: "Mic defaut",
+    value: "1",
+  },
+  {
+    label: "Mic head phone",
+    value: "2",
+  },
+];
 const LiveStream = () => {
   const videoRef = useRef(null);
   const [stream, setStream] = useState(null);
+  const [like, setLike] = useState(null);
 
-  const [data, setData] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [livestreamData, setLivestreamData] = useState([]);
+
   const [inputValue, setInputValue] = useState("");
-  const [isSocketListening, setIsSocketListening] = useState(false);
   const [data1, setData1] = useState(null);
+  const [isModalOpen1, setIsModalOpen1] = useState(false);
+  const [isModalOpen2, setIsModalOpen2] = useState(false);
+  const [fileList, setFileList] = useState([]);
+  const [streamId, setStreamId] = useState(null);
 
-  // const dataObject = JSON.parse(livestreamData);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    cameraInput: "",
+    micInput: "",
+    thumbnail: [],
+  });
 
-  // const idArray = livestreamData.map((item) => item._id);
-  // console.log(idArray);
+  const shop_domain = sessionStorage.getItem("shop_domain");
+  const access_token = sessionStorage.getItem("access_token");
+  const token = sessionStorage.getItem("token");
+  const onChanges = (value, key) => {
+    setFormData((prevFormData) => ({
+      ...prevFormData,
+      [key]: value,
+    }));
+  };
+  const onChange = ({ fileList: newFileList }) => {
+    setFileList(newFileList);
+  };
+  const onPreview = async (file) => {
+    let src = file.url;
+    if (!src) {
+      src = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file.originFileObj);
+        reader.onload = () => resolve(reader.result);
+      });
+    }
+    const image = new Image();
+    image.src = src;
+    const imgWindow = window.open(src);
+    imgWindow?.document.write(image.outerHTML);
+  };
+  const navigate = useNavigate();
   const showModal = () => {
     setIsModalOpen(true);
   };
@@ -37,35 +105,91 @@ const LiveStream = () => {
   const handleCancel = () => {
     setIsModalOpen(false);
   };
-
-  const appendData = () => {
-    fetch(fakeDataUrl)
-      .then((res) => res.json())
-      .then((body) => {
-        setData(data.concat(body.results));
-        message.success(`${body.results.length} more items loaded!`);
+  const showModal1 = () => {
+    setIsModalOpen1(true);
+    axios
+      .get(`https://${shop_domain}/admin/api/2024-04/products.json`, {
+        // params: {
+        //     ids: ids
+        // },
+        headers: {
+          "X-Shopify-Access-Token": "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",
+        },
+      })
+      .then((response) => {
+        // Handle success
+        console.log("Data:", response);
+      })
+      .catch((error) => {
+        // Handle error
+        console.error("Error:", error);
       });
   };
-  useEffect(() => {
-    appendData();
-  }, []);
-  const onScroll = (e) => {
-    // Refer to: https://developer.mozilla.org/en-US/docs/Web/API/Element/scrollHeight#problems_and_solutions
-    if (
-      Math.abs(
-        e.currentTarget.scrollHeight -
-          e.currentTarget.scrollTop -
-          ContainerHeight
-      ) <= 1
-    ) {
-      appendData();
-    }
+  const handleOk1 = () => {
+    setIsModalOpen1(false);
   };
-  async function startMedia() {
+  const handleCancel1 = () => {
+    setIsModalOpen1(false);
+  };
+  const showModal2 = () => {
+    setIsModalOpen(false);
+    setIsModalOpen2(true);
+  };
+
+  const handleOk2 = async () => {
+    console.log(formData);
+    const value = {
+      title: formData.title,
+      description: formData.description,
+    };
+    axios
+      .post(`https://api.windoo.vn/api/livestream/create`, value, {
+        headers: {
+          "X-Authorization": token,
+        },
+      })
+      .then((response) => {
+        console.log("live stream create successfully:", response.data);
+        setStreamId(response.data._id);
+        if (response.data._id != null) {
+          const socket = io(host, {
+            extraHeaders: {
+              "x-authorization": token,
+            },
+          });
+          socket.on("connect", () => {
+            const roomId = `livestream_${response.data._id}`; // Thay roomId bằng roomId bạn nhận được từ server
+            console.log("roomId: ", roomId);
+            console.log("host: ", host);
+            console.log("token: ", token);
+            // socket.emit("joinRoom", roomId);
+            setTimeout(() => {
+              socket.emit("joinRoom", roomId);
+            }, 500);
+
+            // joinRoom(roomId);
+            console.log("Connected to server");
+          });
+
+          socket.on("livestreamToClient", (datas) => {
+            setData1(datas);
+            console.log("🚀 ~ socket.on ~ datas:", datas);
+            setLivestreamData((prevData) => [...prevData, datas]);
+          });
+
+          socket.on("emojiToClient", (datass) => {
+            setLike(JSON.parse(datass));
+          });
+        }
+      })
+      .catch((error) => {
+        console.error("Error posting comment:", error);
+        // Xử lý lỗi tại đây nếu cần
+      });
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
+        video: formData.cameraInput == "" ? false : true,
+        audio: formData.micInput == "" ? false : true,
       });
       setStream(mediaStream);
       if (videoRef.current) {
@@ -74,6 +198,40 @@ const LiveStream = () => {
     } catch (err) {
       console.error("Error accessing media devices: ", err);
     }
+
+    setFormData({
+      title: "",
+      description: "",
+      cameraInput: "",
+      micInput: "",
+      thumbnail: [],
+    });
+    setIsModalOpen2(false);
+  };
+  const handleCancel2 = () => {
+    setFormData({
+      title: "",
+      description: "",
+      cameraInput: "",
+      micInput: "",
+      thumbnail: [],
+    });
+    setIsModalOpen2(false);
+  };
+  async function startMedia() {
+    showModal();
+    // try {
+    //   const mediaStream = await navigator.mediaDevices.getUserMedia({
+    //     video: true,
+    //     audio: true,
+    //   });
+    //   setStream(mediaStream);
+    //   if (videoRef.current) {
+    //     videoRef.current.srcObject = mediaStream;
+    //   }
+    // } catch (err) {
+    //   console.error("Error accessing media devices: ", err);
+    // }
   }
 
   function stopMedia() {
@@ -82,41 +240,54 @@ const LiveStream = () => {
         track.stop();
       });
       setStream(null);
+      setLivestreamData([]);
+      setLike(null);
+      setStreamId(null);
     }
   }
   // Kết nối tới máy chủ
 
+  // useEffect(() => {
+  //   if (streamId != null) {
+  //     socket.once("connect", () => {
+  //       const roomId = `livestream_${streamId}`; // Thay roomId bằng roomId bạn nhận được từ server
+  //       console.log("roomId: ", roomId);
+  //       console.log("host: ", host);
+  //       console.log("token: ", token);
+  //       socket.emit("joinRoom", roomId);
+
+  //       console.log("Connected to server");
+  //     });
+
+  //     socket.on("livestreamToClient", (datas) => {
+  //       setData1(datas);
+  //       console.log("🚀 ~ socket.on ~ datas:", datas);
+  //       setLivestreamData((prevData) => [...prevData, datas]);
+  //     });
+
+  //     socket.on("emojiToClient", (datass) => {
+  //       setLike(JSON.parse(datass));
+  //     });
+  //   }
+  //   // No dependency array, cleanup will run on unmount
+  //   return () => {
+  //     // Disconnection logic here
+  //     socket.disconnect();
+  //   };
+  // }, []);
+
   useEffect(() => {
-    const socket = io(host, {
-      extraHeaders: {
-        "x-authorization": token,
-      },
-    });
-    socket.once("connect", () => {
-      const roomId = "livestream_664175a1e9ccd5d0e257549a"; // Thay roomId bằng roomId bạn nhận được từ server
-      socket.emit("joinRoom", roomId);
-
-      console.log("Connected to server");
-    });
-    // socket.on("disconnect", () => {
-    //   console.log("Disconnected from server");
-    // });
-    socket.on("livestreamToClient", (datas) => {
-      // console.log("Received livestream data:", data);
-      // Xử lý dữ liệu nhận được ở đây
-      console.log(new Date());
-      console.log("data:", datas);
-      setData1(datas);
-      setLivestreamData((prevData) => [...prevData, datas]);
-    });
-  }, []);
-
+    if (!shop_domain || !token) {
+      // Chuyển hướng đến trang đăng nhập nếu token hoặc userId không tồn tại
+      navigate("/auth");
+    }
+  }, [navigate]);
   const handleEnter = (e) => {
     const comment = {
-      livestream_id: "664175a1e9ccd5d0e257549a",
+      livestream_id: streamId,
       chat_content: e.target.value,
     };
-    console.log(comment);
+
     axios
       .post(`https://api.windoo.vn/api/livestream/comment`, comment, {
         headers: {
@@ -135,10 +306,10 @@ const LiveStream = () => {
   };
   const handleClick = (value) => {
     const comment = {
-      livestream_id: "664175a1e9ccd5d0e257549a",
+      livestream_id: streamId,
       chat_content: value,
     };
-    console.log(comment);
+
     axios
       .post(`https://api.windoo.vn/api/livestream/comment`, comment, {
         headers: {
@@ -158,24 +329,57 @@ const LiveStream = () => {
   const handleChange = (e) => {
     setInputValue(e.target.value); // Cập nhật giá trị trong biến state khi người dùng nhập vào Input
   };
-  // const createChatHistory = () => {
-  //   const newTextMessageToSend = JSON.stringify(listIDFile);
-  //   return axios
-  //     .post(
-  //       `https://api.windoo.vn/api/chat-history/create`,
-  //       newTextMessageToSend,
-  //       {
-  //         headers: {
-  //           "X-Authorization": token,
-  //         },
-  //       }
-  //     )
-  //     .then((response) => response.data)
-  //     .catch((error) => {
-  //       console.error("Error creating chat history:", error);
-  //       throw error;
-  //     });
-  // };
+
+  const handleLike = () => {
+    const like = {
+      livestream_id: streamId,
+      react_type: "wow",
+    };
+
+    axios
+      .post(`https://api.windoo.vn/api/livestream/like`, like, {
+        headers: {
+          "X-Authorization": token,
+        },
+      })
+      .then((response) => {
+        console.log("Comment posted successfully:", response.data);
+        setInputValue(""); // Xóa nội dung trong input sau khi gửi
+      })
+      .catch((error) => {
+        console.error("Error posting comment:", error);
+        // Xử lý lỗi tại đây nếu cần
+      });
+    setInputValue("");
+  };
+
+  const items = [
+    {
+      key: "1",
+      label: (
+        <>
+          <img
+            onClick={() => handleLike()}
+            src="https://media.tenor.com/_e4JAx0iHS0AAAAi/facebook-emoji.gif"
+            alt="External GIF"
+            width={30}
+          />
+          <img
+            onClick={() => handleLike()}
+            src="https://media.tenor.com/J1Nk6FEG2yYAAAAi/facebook-emoji.gif"
+            alt="External GIF"
+            width={30}
+          />
+          <img
+            onClick={() => handleLike()}
+            src="https://media.tenor.com/RYibGej0GvcAAAAi/facebook-emoji.gif"
+            alt="External GIF"
+            width={30}
+          />
+        </>
+      ),
+    },
+  ];
   return (
     <LiveStreamStyle>
       <div>
@@ -188,6 +392,43 @@ const LiveStream = () => {
               >
                 {stream ? "Stop" : "Start"} Live
               </button>
+              {like == null ? null : (
+                <div
+                  style={{
+                    width: 50,
+
+                    position: "absolute",
+                    zIndex: 999,
+                    left: 100,
+                    display: "grid",
+
+                    gridTemplateColumns: "1fr 1fr",
+                    padding: 5,
+                    borderRadius: 10,
+                    background: "#DDDDDD",
+                  }}
+                >
+                  <i
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      fontSize: 20,
+                    }}
+                    class="fa-regular fa-heart"
+                  ></i>
+                  <span
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    {like?.livestream_id?.like_number}
+                  </span>
+                </div>
+              )}
+
               <video
                 style={{ objectFit: "cover", width: "100%", height: "95%" }}
                 ref={videoRef}
@@ -195,7 +436,7 @@ const LiveStream = () => {
                 playsInline
               />
               <ShoppingCartOutlined
-                onClick={showModal}
+                onClick={showModal1}
                 style={{ fontSize: 25 }}
               />
               <Modal
@@ -212,7 +453,7 @@ const LiveStream = () => {
                     //   gridTemplateColumns: "1fr 1fr",
                     // }}
                   >
-                    <div className="modal_container_left">
+                    <div onClick={showModal2} className="modal_container_left">
                       <div>
                         <img
                           src="https://cdn-icons-png.flaticon.com/512/2989/2989838.png"
@@ -228,9 +469,115 @@ const LiveStream = () => {
                         </p>
                       </div>
                     </div>
-                    <div className="modal_container_right">ádsd</div>
+                    <div className="modal_container_left">
+                      <div>
+                        <img
+                          src="https://cdn-icons-png.flaticon.com/512/1159/1159798.png"
+                          alt=""
+                          width={"60px"}
+                        />
+                      </div>
+                      <div>Webcam</div>
+                      <div>
+                        <p>
+                          Stream directly with your webcam using our shopify
+                          app!
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </ModalStyle>
+              </Modal>
+              <Modal
+                title="Product"
+                open={isModalOpen1}
+                onOk={handleOk1}
+                onCancel={handleCancel1}
+              >
+                <ProductStyle>
+                  <div className="product_container">
+                    <div className="product_containers">
+                      <Checkbox>
+                        <div className="product_container_item">
+                          <img
+                            onClick={() => handleLike()}
+                            src="https://media.tenor.com/_e4JAx0iHS0AAAAi/facebook-emoji.gif"
+                            alt="External GIF"
+                            width={31}
+                          />
+                          <span>Nghĩa</span>
+                          <PushpinOutlined />
+                        </div>
+                      </Checkbox>
+                    </div>
+                    <div className="product_containers">
+                      <Checkbox>
+                        <div className="product_container_item">
+                          <img
+                            onClick={() => handleLike()}
+                            src="https://media.tenor.com/_e4JAx0iHS0AAAAi/facebook-emoji.gif"
+                            alt="External GIF"
+                            width={31}
+                          />
+                          <span>Nghĩa</span>
+                          <PushpinOutlined />
+                        </div>
+                      </Checkbox>
+                    </div>
+                  </div>
+                </ProductStyle>
+              </Modal>
+              <Modal
+                title="Livestream’s setting"
+                open={isModalOpen2}
+                onOk={handleOk2}
+                onCancel={handleCancel2}
+              >
+                <div style={{ height: "auto" }}>
+                  <Typography.Title level={5}>Title</Typography.Title>
+                  <Input
+                    placeholder="Title of stream..."
+                    value={formData.title}
+                    onChange={(e) => onChanges(e.target.value, "title")}
+                  />
+                  <Typography.Title level={5}>Description</Typography.Title>
+                  <TextArea
+                    showCount
+                    maxLength={100}
+                    placeholder="disable resize"
+                    style={{ height: 120, resize: "none" }}
+                    value={formData.description}
+                    onChange={(e) => onChanges(e.target.value, "description")}
+                  />
+                  <Typography.Title level={5}>Camera input</Typography.Title>
+                  <Select
+                    style={{ width: "100%" }}
+                    options={options}
+                    value={formData.cameraInput}
+                    onChange={(value) => onChanges(value, "cameraInput")}
+                  />
+                  <Typography.Title level={5}>Mic input</Typography.Title>
+                  <Select
+                    style={{ width: "100%" }}
+                    options={optionss}
+                    value={formData.micInput}
+                    onChange={(value) => onChanges(value, "micInput")}
+                  />
+                  <Typography.Title level={5}>
+                    Choose a thumbnail
+                  </Typography.Title>
+                  <ImgCrop rotationSlider>
+                    <Upload
+                      action="https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload"
+                      listType="picture-card"
+                      fileList={fileList}
+                      onChange={onChange}
+                      onPreview={onPreview}
+                    >
+                      {fileList.length < 5 && "+ Upload"}
+                    </Upload>
+                  </ImgCrop>
+                </div>
               </Modal>
             </div>
 
@@ -278,7 +625,7 @@ const LiveStream = () => {
                       {(item) => (
                         <List.Item key={item.user_email}>
                           <List.Item.Meta
-                            avatar={<Avatar src={item.createBy.avatar} />}
+                            avatar={<Avatar src={item.createBy.user_avatar} />}
                             title={
                               <a href="https://ant.design">
                                 {item.createBy.user_name}
@@ -300,7 +647,24 @@ const LiveStream = () => {
                     onPressEnter={handleEnter}
                     onChange={handleChange}
                     suffix={
-                      <SendOutlined onClick={() => handleClick(inputValue)} />
+                      <>
+                        <Dropdown
+                          menu={{
+                            items,
+                          }}
+                          placement="top"
+                          arrow
+                        >
+                          <SmileOutlined
+                            style={{ fontSize: 20 }}
+                            // onClick={() => handleClick(inputValue)}
+                          />
+                        </Dropdown>
+                        <SendOutlined
+                          style={{ fontSize: 20 }}
+                          onClick={() => handleClick(inputValue)}
+                        />
+                      </>
                     }
                   />
                 </div>
