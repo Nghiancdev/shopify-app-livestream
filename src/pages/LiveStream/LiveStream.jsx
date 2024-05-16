@@ -12,6 +12,7 @@ import {
   Select,
   Upload,
 } from "antd";
+import { WHIPClient } from "@eyevinn/whip-web-client";
 import ImgCrop from "antd-img-crop";
 import {
   SendOutlined,
@@ -60,7 +61,10 @@ const LiveStream = () => {
   const [isModalOpen2, setIsModalOpen2] = useState(false);
   const [fileList, setFileList] = useState([]);
   const [streamId, setStreamId] = useState(null);
-
+  const [listProduct, setListProduct] = useState([]);
+  const [sdp, setSdp] = useState("");
+  const apiUrl =
+    "https://livestream.windoo.vn/rtc/v1/whip/?app=live&stream=livestream6";
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -72,6 +76,70 @@ const LiveStream = () => {
   const shop_domain = sessionStorage.getItem("shop_domain");
   const access_token = sessionStorage.getItem("access_token");
   const token = sessionStorage.getItem("token");
+
+  const startWebRTC = async () => {
+    try {
+      const client = new WHIPClient({
+        endpoint:
+          "https://livestream.windoo.vn/rtc/v1/whip/?app=live&stream=livestream7",
+        opts: {
+          debug: true,
+          iceServers: [{ urls: "stun:stun.l.google.com:19320" }],
+        },
+      });
+      await client.setIceServersFromEndpoint();
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+      await client.ingest(stream);
+      const peerConnection = new RTCPeerConnection();
+
+      // Add stream tracks to the peer connection
+      stream
+        .getTracks()
+        .forEach((track) => peerConnection.addTrack(track, stream));
+
+      // Create SDP offer
+      const offer = await peerConnection.createOffer();
+      await peerConnection.setLocalDescription(offer);
+
+      // Wait for ICE gathering to complete
+      peerConnection.onicegatheringstatechange = async () => {
+        if (peerConnection.iceGatheringState === "complete") {
+          const sdp = peerConnection.localDescription.sdp;
+          setSdp(sdp);
+
+          // Send SDP to the API
+          // try {
+          //   const response = await axios.post(
+          //     apiUrl,
+          //     sdp,
+
+          //     {
+          //       headers: {
+          //         "Content-Type": "application/sdp", // Set appropriate content type
+          //       },
+          //     }
+          //   );
+          //   console.log("SDP successfully sent:", response.data);
+          // } catch (error) {
+          //   console.error("Error sending SDP:", error);
+          // }
+        }
+      };
+
+      // Handle ICE candidates
+      peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+          // Handle new ICE candidate
+        }
+      };
+    } catch (error) {
+      console.error("Error accessing media devices:", error);
+    }
+  };
+
   const onChanges = (value, key) => {
     setFormData((prevFormData) => ({
       ...prevFormData,
@@ -107,18 +175,33 @@ const LiveStream = () => {
   };
   const showModal1 = () => {
     setIsModalOpen1(true);
-    axios
-      .get(`https://${shop_domain}/admin/api/2024-04/products.json`, {
-        // params: {
-        //     ids: ids
-        // },
-        headers: {
-          "X-Shopify-Access-Token": "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",
-        },
-      })
+    // axios
+    //   .get(`https://${shop_domain}/admin/api/2024-04/products.json`, {
+    //     // params: {
+    //     //     ids: ids
+    //     // },
+    //     headers: {
+    //       "X-Shopify-Access-Token": "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",
+    //     },
+    //   })
+    //   .then((response) => {
+    //     // Handle success
+    //     console.log("Data:", response);
+    //   })
+    //   .catch((error) => {
+    //     // Handle error
+    //     console.error("Error:", error);
+    //   });
+    axios({
+      method: "get",
+      url: `https://api.windoo.vn/api/livestream/all-product`,
+      headers: {
+        Authorization: token,
+      },
+    })
       .then((response) => {
-        // Handle success
-        console.log("Data:", response);
+        console.log(response.data);
+        setListProduct(response.data);
       })
       .catch((error) => {
         // Handle error
@@ -194,6 +277,7 @@ const LiveStream = () => {
       setStream(mediaStream);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
+        startWebRTC();
       }
     } catch (err) {
       console.error("Error accessing media devices: ", err);
@@ -219,19 +303,20 @@ const LiveStream = () => {
     setIsModalOpen2(false);
   };
   async function startMedia() {
-    showModal();
-    // try {
-    //   const mediaStream = await navigator.mediaDevices.getUserMedia({
-    //     video: true,
-    //     audio: true,
-    //   });
-    //   setStream(mediaStream);
-    //   if (videoRef.current) {
-    //     videoRef.current.srcObject = mediaStream;
-    //   }
-    // } catch (err) {
-    //   console.error("Error accessing media devices: ", err);
-    // }
+    // showModal();
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+      setStream(mediaStream);
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+        startWebRTC();
+      }
+    } catch (err) {
+      console.error("Error accessing media devices: ", err);
+    }
   }
 
   function stopMedia() {
@@ -276,12 +361,12 @@ const LiveStream = () => {
   //   };
   // }, []);
 
-  useEffect(() => {
-    if (!shop_domain || !token) {
-      // Chuyển hướng đến trang đăng nhập nếu token hoặc userId không tồn tại
-      navigate("/auth");
-    }
-  }, [navigate]);
+  // useEffect(() => {
+  //   if (!shop_domain || !token) {
+  //     // Chuyển hướng đến trang đăng nhập nếu token hoặc userId không tồn tại
+  //     navigate("/auth");
+  //   }
+  // }, [navigate]);
   const handleEnter = (e) => {
     const comment = {
       livestream_id: streamId,
@@ -496,34 +581,22 @@ const LiveStream = () => {
               >
                 <ProductStyle>
                   <div className="product_container">
-                    <div className="product_containers">
-                      <Checkbox>
-                        <div className="product_container_item">
-                          <img
-                            onClick={() => handleLike()}
-                            src="https://media.tenor.com/_e4JAx0iHS0AAAAi/facebook-emoji.gif"
-                            alt="External GIF"
-                            width={31}
-                          />
-                          <span>Nghĩa</span>
-                          <PushpinOutlined />
-                        </div>
-                      </Checkbox>
-                    </div>
-                    <div className="product_containers">
-                      <Checkbox>
-                        <div className="product_container_item">
-                          <img
-                            onClick={() => handleLike()}
-                            src="https://media.tenor.com/_e4JAx0iHS0AAAAi/facebook-emoji.gif"
-                            alt="External GIF"
-                            width={31}
-                          />
-                          <span>Nghĩa</span>
-                          <PushpinOutlined />
-                        </div>
-                      </Checkbox>
-                    </div>
+                    {listProduct.products?.map((item, index) => (
+                      <div key={index} className="product_containers">
+                        <Checkbox>
+                          <div className="product_container_item">
+                            <img
+                              onClick={() => handleLike()}
+                              src={item.image?.src}
+                              alt=""
+                              width={31}
+                            />
+                            <span>{item.title}</span>
+                            <PushpinOutlined />
+                          </div>
+                        </Checkbox>
+                      </div>
+                    ))}
                   </div>
                 </ProductStyle>
               </Modal>

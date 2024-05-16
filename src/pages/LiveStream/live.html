@@ -1,0 +1,26 @@
+<html>
+  <head><title>Webcam ingest</title></head>
+  <body>
+    <video autoplay muted>
+    <script src="whip-client.js"></script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function(event) {
+        const client = new WHIPClient({
+          endpoint: "https://livestream.windoo.vn/rtc/v1/whip/?app=live&stream=livestream6",
+        });
+        const videoIngest = document.querySelector("video#ingest");
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+          .then(function(mediaStream) {
+            videoIngest.srcObject = mediaStream;
+            return client.ingest(mediaStream);
+          })
+          .then(function() {
+            console.log("Ingesting");
+          })
+          .catch(function(err) {
+            console.error(err);
+          });
+      });
+    </script>
+  </body>
+</html>
