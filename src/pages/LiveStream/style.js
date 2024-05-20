@@ -1,51 +1,96 @@
 import styled from "styled-components";
 export const LiveStreamStyle = styled.div`
   .container {
+    flex: 1;
+    .container_top {
+      color: var(--p-color-text);
+      font-feature-settings: "clig" off, "liga" off;
+      /* Heading/heading-2xl */
+      /* font-family: Inter; */
+      padding-left: 10px;
+      font-size: 30px;
+      font-style: normal;
+      font-weight: 700;
+      line-height: 40px; /* 133.333% */
+      letter-spacing: -0.3px;
+    }
     .container_main {
       padding: 10px;
-      border: 1px solid black;
+
       display: grid;
-      grid-template-columns: 3fr 1fr;
+      grid-template-columns: 2.9fr 1fr;
       .container_main_left {
         border: 1px solid black;
-        height: 600px;
+        height: 100%;
         display: inline-block;
+        border-radius: 10px;
+        justify-content: center;
+
+        .container_main_left_video {
+          height: 100%;
+        }
       }
+
       .container_main_right {
         margin-left: 10px;
-        .container_main_right_top {
-          border: 2px solid black;
-          border-radius: 10px;
-          .container_main_right_top_top {
-            padding: 10px;
 
+        .container_main_right_bottom {
+          background-color: #ffffff;
+          border-radius: 10px;
+          height: 100%;
+          .container_main_right_bottom_top {
             border-bottom: 1px solid gray;
           }
-          .container_main_right_top_bottom {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            justify-items: center;
-            .container_main_right_top_bottom_item {
-              text-align: center;
-              .container_main_right_top_bottom_item_top {
-                border-bottom: 1px solid black;
-                padding: 20px;
-              }
-              .container_main_right_top_bottom_item_bottom {
-                padding: 20px;
-              }
-            }
+          .container_main_right_bottom_bottom {
           }
         }
-        .container_main_right_bottom {
-          border: 2px solid black;
-          border-radius: 10px;
-          margin-top: 10px;
-          height: 67%;
-          .container_main_right_bottom_top {
-            padding: 10px;
+      }
+    }
+    .container_bottom {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      .container_bottom_left {
+        .container_bottom_left_title {
+          color: var(--p-color-text);
+          font-feature-settings: "clig" off, "liga" off;
+          /* Heading/heading-xl */
+          font-family: Inter;
+          font-size: 24px;
+          font-style: normal;
+          font-weight: 700;
+          line-height: 32px; /* 133.333% */
+          letter-spacing: -0.2px;
+        }
+        .container_bottom_left_info {
+          margin-top: 20px;
+          display: flex;
+          grid-template-columns: 1fr 1fr;
+          .container_bottom_left_info_name {
+            padding-left: 10px;
+            color: #303030;
+            font-size: 18px;
+            font-style: normal;
+            font-weight: 600;
+            flex: 1;
+            align-content: center;
+          }
+        }
+        .container_bottom_left_pin {
+          margin-top: 20px;
 
-            border-bottom: 1px solid gray;
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          .container_bottom_left_pin_product {
+            .container_bottom_left_pin_product_item {
+              display: flex;
+              grid-template-columns: 1fr 1fr;
+              background-color: #ffffff;
+              border-radius: 15px;
+              margin-right: 30px;
+              padding-top: 5px;
+              padding-left: 6px;
+              padding-bottom: 5px;
+            }
           }
         }
       }
@@ -65,15 +110,6 @@ export const ModalStyle = styled.div`
 `;
 export const ProductStyle = styled.div`
   .product_container {
-    .product_containers {
-      border-top: 1px solid gray;
-      /* border-bottom: 0.1px solid gray; */
-      .product_container_item {
-        width: 100%;
-        padding: 10px;
-        display: grid;
-        grid-template-columns: 1fr 11fr 1fr;
-      }
-    }
+    border: 1px solid black;
   }
 `;
