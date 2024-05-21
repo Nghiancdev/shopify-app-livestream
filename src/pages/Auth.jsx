@@ -19,15 +19,14 @@ const Auth = () => {
         },
       })
       .then((response) => {
-        console.log(
-          "Login posted successfully:",
-          response.headers["x-authorization"]
-        );
+        console.log("Login posted successfully:", response.data);
 
         if (response.status === 200) {
           sessionStorage.setItem("shop_domain", response.data.domain_shop);
           sessionStorage.setItem("access_token", response.data.access_token);
           sessionStorage.setItem("token", response.headers["x-authorization"]);
+          sessionStorage.setItem("user_name", response.data.user_name);
+          sessionStorage.setItem("user_avatar", response.data.user_avatar);
           navigate("/");
         }
       })

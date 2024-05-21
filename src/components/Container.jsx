@@ -50,6 +50,7 @@ const HeaderStyle = styled.div`
   }
 `;
 const Container = ({ children }) => {
+  const user_avatar = sessionStorage.getItem("user_avatar");
   return (
     <ContainerStyle>
       <HeaderStyle>
@@ -93,7 +94,11 @@ const Container = ({ children }) => {
               </svg>
             </div>
             <div className="container_left_avatar">
-              <img style={{ borderRadius: 7 }} src="/portrait06.png" alt="" />
+              <img
+                style={{ borderRadius: 7, width: 30 }}
+                src={user_avatar}
+                alt=""
+              />
             </div>
           </div>
         </div>

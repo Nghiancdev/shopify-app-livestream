@@ -54,7 +54,7 @@ export const LiveStreamStyle = styled.div`
           color: var(--p-color-text);
           font-feature-settings: "clig" off, "liga" off;
           /* Heading/heading-xl */
-          font-family: Inter;
+          /* font-family: Inter; */
           font-size: 24px;
           font-style: normal;
           font-weight: 700;
@@ -82,6 +82,7 @@ export const LiveStreamStyle = styled.div`
           grid-template-columns: 1fr 1fr;
           .container_bottom_left_pin_product {
             .container_bottom_left_pin_product_item {
+              margin-top: 10px;
               display: flex;
               grid-template-columns: 1fr 1fr;
               background-color: #ffffff;
@@ -99,17 +100,29 @@ export const LiveStreamStyle = styled.div`
 `;
 export const ModalStyle = styled.div`
   .modal_container {
-    border: 1px solid black;
+    border-top: 1px solid #e5e5e4;
+
     display: grid;
     grid-template-columns: 1fr 1fr;
     .modal_container_left {
-      border: 1px solid black;
+      border: 0.5px solid #e5e5e4;
       text-align: center;
+      margin-right: 10px;
+      margin-left: 10px;
+      margin-top: 12px;
+      border-radius: 30px;
     }
   }
 `;
 export const ProductStyle = styled.div`
   .product_container {
-    border: 1px solid black;
+    .product_container_item {
+      margin-top: 10px;
+      display: grid;
+      grid-template-columns: 1fr 3fr 1fr;
+      box-shadow: 0px 3px 8px 0px rgba(0, 0, 0, 0.75);
+      border-radius: 10px;
+      padding: 5px;
+    }
   }
 `;
