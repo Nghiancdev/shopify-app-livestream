@@ -33,15 +33,28 @@ export const LiveStreamStyle = styled.div`
 
       .container_main_right {
         margin-left: 10px;
+       
+        height: 700px;
+        .container_main_right_top{
+          background-color: #ffffff;
+          border-radius: 10px;
+          height: 240px;
+          
+          margin-bottom: 18px;
+          padding: 7px;
 
+        }
         .container_main_right_bottom {
           background-color: #ffffff;
           border-radius: 10px;
-          height: 100%;
+          height: 61%;
+          
           .container_main_right_bottom_top {
             border-bottom: 1px solid gray;
           }
           .container_main_right_bottom_bottom {
+     
+          
           }
         }
       }
@@ -103,7 +116,8 @@ export const LiveStreamStyle = styled.div`
       margin-top: 10px;
       display: flex;
       overflow-x: scroll;
-    width: 1291px;
+    /* width: 1291px; */
+      width: 96%;
     
       .container_center_item{
         margin-right:10px;

@@ -580,7 +580,7 @@ const LiveStream = () => {
   useEffect(() => {
     if (!shop_domain || !token) {
       // Chuyển hướng đến trang đăng nhập nếu token hoặc userId không tồn tại
-      navigate("/auth");
+      // navigate("/auth");
     }
   }, [navigate]);
   const handleEnter = (e) => {

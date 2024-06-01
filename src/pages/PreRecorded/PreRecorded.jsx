@@ -42,7 +42,7 @@ import Container from "../../components/Container";
 import moment from 'moment';
 const { TextArea } = Input;
 const { RangePicker } = DatePicker;
-const ContainerHeight = 550;
+const ContainerHeight = 320;
 const host = "https://socket.api.windoo.vn/socket";
 const options = [
   {
@@ -1444,6 +1444,27 @@ const PreRecorded = () => {
                 </Modal>
               </div>
               <div className="container_main_right">
+                <div className="container_main_right_top">
+                    <span style={{fontWeight:700}}>Title</span>
+                    <Input
+                      placeholder="Title of stream..."
+                      // value={formData.title}
+                      // onChange={(e) => onChanges(e.target.value, "title")}
+                    />
+                    <span style={{fontWeight:700}}>Description</span>
+                    <TextArea
+                      
+                      maxLength={100}
+                      placeholder="disable resize"
+                      style={{ height: 120, resize: "none" }}
+                      // value={formData.description}
+                      // onChange={(e) => onChanges(e.target.value, "description")}
+                    />
+                    <div style={{marginTop:10}} >
+                    <Checkbox>Loop</Checkbox>
+                    <Button style={{marginLeft:"40%",backgroundColor:'black'}} type="primary">Confirm</Button>
+                    </div>
+                </div>
                 <div className="container_main_right_bottom">
                   <div className="container_main_right_bottom_top">
                     <span style={{ fontSize: 27, fontWeight: 600 }}>Chat</span>
