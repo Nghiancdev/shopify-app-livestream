@@ -4,6 +4,7 @@ import {
   ModalStyle,
   ProductStyle,
   HeaderStyle,
+
 } from "./style";
 import {
   Typography,
@@ -16,6 +17,8 @@ import {
   Checkbox,
   Select,
   Upload,
+  Button,
+  DatePicker
 } from "antd";
 import { WHIPClient } from "@eyevinn/whip-web-client";
 import ImgCrop from "antd-img-crop";
@@ -27,6 +30,8 @@ import {
   SearchOutlined,
   EyeInvisibleOutlined,
   EyeTwoTone,
+  PlusOutlined,
+  UploadOutlined
 } from "@ant-design/icons";
 import VirtualList from "rc-virtual-list";
 import { io } from "socket.io-client";
@@ -34,8 +39,9 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Menus from "../../components/Menus";
 import Container from "../../components/Container";
-
+import moment from 'moment';
 const { TextArea } = Input;
+const { RangePicker } = DatePicker;
 const ContainerHeight = 550;
 const host = "https://socket.api.windoo.vn/socket";
 const options = [
@@ -58,13 +64,14 @@ const optionss = [
     value: "2",
   },
 ];
-const LiveStream = () => {
+const PreRecorded = () => {
   const videoRef = useRef(null);
   const [stream, setStream] = useState(null);
   const [like, setLike] = useState(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [livestreamData, setLivestreamData] = useState([]);
+  console.log("🚀 ~ PreRecorded ~ livestreamData:", livestreamData)
 
   const [inputValue, setInputValue] = useState("");
   const [data1, setData1] = useState(null);
@@ -72,9 +79,12 @@ const LiveStream = () => {
   const [isModalOpen2, setIsModalOpen2] = useState(false);
   const [isModalOpen3, setIsModalOpen3] = useState(false);
   const [isModalOpen4, setIsModalOpen4] = useState(false);
+
   const [fileList, setFileList] = useState([]);
+  const [videoFileList, setVideoFileList] = useState([]);
   const [streamId, setStreamId] = useState(null);
   const [streamData, setStreamData] = useState(null);
+
   const [listProduct, setListProduct] = useState([]);
   const [listProductFormat, setListProductFormat] = useState([]);
   const [listDiscountFormat, setListDiscountFormat] = useState([]);
@@ -85,17 +95,7 @@ const LiveStream = () => {
   const liveId = sessionStorage.getItem("liveId");
   const user_name = sessionStorage.getItem("user_name");
   const user_avatar = sessionStorage.getItem("user_avatar");
-  // useEffect(() => {
-  //   // Thêm trường status_pin vào mỗi object trong listProduct khi listProduct thay đổi
-  //   setListProductFormat(
-  //     listProduct.products?.map((product) => ({
-  //       ...product,
-  //       status_pin: false,
-  //     }))
-  //   );
-
-  //   // Cập nhật listProduct với các object đã được cập nhật
-  // }, [listProduct]);
+  const [listSchedule, setlistSchedule] = useState([]);
 
   const handleCheckboxChange = (product) => {
     setSelectedProducts((prevSelectedProducts) => {
@@ -189,6 +189,8 @@ const LiveStream = () => {
   };
 
   const [formData, setFormData] = useState({
+    startTime: '',
+    endTime: '',
     title: "",
     description: "",
     cameraInput: "",
@@ -210,6 +212,7 @@ const LiveStream = () => {
   };
   const onChange = ({ fileList: newFileList }) => {
     setFileList(newFileList);
+    console.log('ảnh:    ', newFileList);
   };
   const onPreview = async (file) => {
     let src = file.url;
@@ -224,6 +227,42 @@ const LiveStream = () => {
     image.src = src;
     const imgWindow = window.open(src);
     imgWindow?.document.write(image.outerHTML);
+  };
+  const onVideoChange = ({ fileList: newFileList }) => setVideoFileList(newFileList);
+
+  const handleDateChange = (dates, dateStrings) => {
+    setFormData({
+      ...formData,
+      startTime: dates[0].toISOString(),
+      endTime: dates[1].toISOString(),
+    });
+    console.log('startTime:  ', dates[0].toISOString())
+
+    console.log('endTime:  ', dates[1].toISOString())
+
+  };
+
+  const calculateSeconds = (startTime, endTime) => {
+    // Chuyển đổi các thời điểm thành đối tượng Date
+    const startDate = new Date(startTime);
+    const endDate = new Date(endTime);
+
+    // Tính chênh lệch giây giữa hai thời điểm
+    const diffInSeconds = (endDate - startDate) / 1000;
+
+    return diffInSeconds;
+  };
+
+  // Hàm định dạng thời gian thành dạng giờ:phút:giây
+  const formatTimes = (totalSeconds) => {
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = Math.floor(totalSeconds % 60);
+
+    // Định dạng thành chuỗi
+    const formattedTime = `${hours}:${minutes < 10 ? '0' : ''}${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+    return formattedTime;
   };
   const navigate = useNavigate();
   const showModal = () => {
@@ -248,20 +287,6 @@ const LiveStream = () => {
   const showModal3 = () => {
     setIsModalOpen3(true);
 
-    // axios({
-    //   method: "get",
-    //   url: `https://api.windoo.vn/api/discount/all-discount-shop`,
-    //   headers: {
-    //     Authorization: token,
-    //   },
-    // })
-    //   .then((response) => {
-    //     setListDiscount(response.data.docs);
-    //   })
-    //   .catch((error) => {
-    //     // Handle error
-    //     console.error("Error:", error);
-    //   });
   };
   const handleOk3 = () => {
     setIsModalOpen3(false);
@@ -272,27 +297,6 @@ const LiveStream = () => {
   const showModal1 = () => {
     setIsModalOpen1(true);
 
-    // axios({
-    //   method: "get",
-    //   url: `https://api.windoo.vn/api/product/all-product-shop`,
-    //   headers: {
-    //     Authorization: token,
-    //   },
-    // })
-    //   .then((response) => {
-    //     console.log(response.data.docs);
-    //     setListProduct(response.data.docs);
-    //     setListProductFormat(
-    //       response.data.docs.products?.map((product) => ({
-    //         ...product,
-    //         status_pin: false,
-    //       }))
-    //     );
-    //   })
-    //   .catch((error) => {
-    //     // Handle error
-    //     console.error("Error:", error);
-    //   });
   };
   useEffect(() => {
     axios({
@@ -336,6 +340,25 @@ const LiveStream = () => {
         // Handle error
         console.error("Error:", error);
       });
+
+    axios
+      .get(`https://api.windoo.vn/api/schedule-live`, {
+        headers: {
+          "X-Authorization": token,
+        },
+      })
+      .then((response) => {
+        console.log("list schedule:", response.data.docs);
+        setlistSchedule(response.data.docs)
+        // setStreamData(response.data.docs);
+      })
+      .catch((error) => {
+        console.error("Error posting comment:", error);
+        // Xử lý lỗi tại đây nếu cần
+      });
+
+
+
   }, []);
   const handleOk1 = () => {
     setIsModalOpen1(false);
@@ -376,66 +399,67 @@ const LiveStream = () => {
   const showModal2 = () => {
     setIsModalOpen(false);
     setIsModalOpen2(true);
+
   };
 
   const handleOk2 = async () => {
-    console.log(formData);
-    const value = {
-      livestream_status: "live",
-      _id: liveId,
-      title: formData.title,
-      description: formData.description,
-    };
+    // console.log(formData);
+    const formDataToSend = new FormData();
+
+    fileList.forEach(file => {
+      formDataToSend.append('image', file.originFileObj);
+    });
+    videoFileList.forEach(file => {
+      formDataToSend.append('file', file.originFileObj);
+    });
+    formDataToSend.append('livestream_status', 'live');
+    formDataToSend.append('title', formData.title);
+    formDataToSend.append('description', formData.description);
+    formDataToSend.append('schedule_live', 'true');
+    formDataToSend.append('scheduled_start_time', formData.startTime);
+    formDataToSend.append('scheduled_end_time', formData.endTime);
     axios
-      .patch(`https://api.windoo.vn/api/livestream/update`, value, {
+      .post(`https://api.windoo.vn/api/livestream/create`, formDataToSend, {
         headers: {
           "X-Authorization": token,
         },
       })
       .then((response) => {
         console.log("live stream create successfully:", response.data);
-        setStreamData(response.data.docs);
+        axios
+          .get(`https://api.windoo.vn/api/schedule-live`, {
+            headers: {
+              "X-Authorization": token,
+            },
+          })
+          .then((response) => {
+            console.log("list schedule:", response.data.docs);
+            setlistSchedule(response.data.docs)
+            // setStreamData(response.data.docs);
+          })
+          .catch((error) => {
+            console.error("Error posting comment:", error);
+            // Xử lý lỗi tại đây nếu cần
+          });
       })
       .catch((error) => {
         console.error("Error posting comment:", error);
         // Xử lý lỗi tại đây nếu cần
       });
-    try {
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video:
-          formData.cameraInput == ""
-            ? false
-            : {
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-            },
-        audio: formData.micInput == "" ? false : true,
-      });
-      setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
 
-        const client = new WHIPClient({
-          endpoint: `${streamData?.livestream_data?.whip_url}`,
-          opts: {
-            debug: true,
-            iceServers: [{ urls: "stun:stun.l.google.com:19320" }],
-          },
-        });
-        await client.setIceServersFromEndpoint();
-        await client.ingest(mediaStream);
-      }
-    } catch (err) {
-      console.error("Error accessing media devices: ", err);
-    }
+
 
     setFormData({
+      startTime: "",
+      endTime: "",
       title: "",
       description: "",
       cameraInput: "",
       micInput: "",
       thumbnail: [],
     });
+    setFileList([]);
+    setVideoFileList([]);
     setIsModalOpen2(false);
   };
   const handleCancel2 = () => {
@@ -448,6 +472,60 @@ const LiveStream = () => {
     });
     setIsModalOpen2(false);
   };
+  const connectSocket = (id) => {
+    const socket = io(host, {
+      extraHeaders: {
+        "x-authorization": token,
+      },
+    });
+    socket.on("connect", () => {
+      const roomId = `livestream_${id}`; // Thay roomId bằng roomId bạn nhận được từ server
+      console.log("roomId: ", roomId);
+      console.log("host: ", host);
+      console.log("token: ", token);
+      // socket.emit("joinRoom", roomId);
+      setTimeout(() => {
+        socket.emit("joinRoom", roomId);
+      }, 500);
+
+      // joinRoom(roomId);
+      console.log("Connected to server");
+    });
+
+    socket.on("livestreamToClient", (datas) => {
+      setData1(datas);
+      console.log("🚀 ~ socket.on ~ datas:", JSON.parse(datas));
+      const convertData = JSON.parse(datas);
+      // setLivestreamData((prevData) => [...prevData, datas]);
+      setLivestreamData((prevData) => [convertData, ...prevData]);
+    });
+
+    socket.on("emojiToClient", (datass) => {
+      setLike(JSON.parse(datass));
+    });
+
+    socket.on("viewToClient", (datasss) => {
+      console.log("🚀 ~ socket.on ~ viewwwwwww:", datasss);
+      setView(JSON.parse(datasss));
+    });
+
+    axios
+      .get(`https://api.windoo.vn/api/livestream/list-comment/${liveId}`, {
+        headers: {
+          "X-Authorization": token,
+        },
+      })
+      .then((response) => {
+        console.log("list comment", response.data.docs);
+        setLivestreamData(response.data.docs);
+
+      })
+      .catch((error) => {
+        console.error("Error posting comment:", error);
+        // Xử lý lỗi tại đây nếu cần
+      });
+
+  }
   async function startMedia() {
     showModal();
     const value = {
@@ -580,7 +658,7 @@ const LiveStream = () => {
   useEffect(() => {
     if (!shop_domain || !token) {
       // Chuyển hướng đến trang đăng nhập nếu token hoặc userId không tồn tại
-      navigate("/auth");
+      // navigate("/auth");
     }
   }, [navigate]);
   const handleEnter = (e) => {
@@ -690,7 +768,7 @@ const LiveStream = () => {
 
         <LiveStreamStyle>
           <div className="container">
-            <div className="container_top">Live Stream</div>
+            <div className="container_top">Pre-recorded Stream</div>
             <div className="container_main">
               <div className="container_main_left">
                 {stream ? (
@@ -1251,7 +1329,7 @@ const LiveStream = () => {
                 </Modal>
 
                 <Modal
-                  title="Camera Setting"
+                  title="Create Pre-record"
                   open={isModalOpen2}
                   onOk={handleOk2}
                   onCancel={handleCancel2}
@@ -1272,26 +1350,20 @@ const LiveStream = () => {
                       value={formData.description}
                       onChange={(e) => onChanges(e.target.value, "description")}
                     />
-                    <Typography.Title level={5}>Camera input</Typography.Title>
-                    <Select
-                      style={{ width: "100%" }}
-                      options={options}
-                      value={formData.cameraInput}
-                      onChange={(value) => onChanges(value, "cameraInput")}
-                    />
-                    <Typography.Title level={5}>Mic input</Typography.Title>
-                    <Select
-                      style={{ width: "100%" }}
-                      options={optionss}
-                      value={formData.micInput}
-                      onChange={(value) => onChanges(value, "micInput")}
+                    <Typography.Title level={5}>Choose time</Typography.Title>
+
+                    <RangePicker
+                      showTime
+                      format="YYYY-MM-DD HH:mm:ss"
+                      onChange={handleDateChange}
+                      value={formData.startTime && formData.endTime ? [moment(formData.startTime), moment(formData.endTime)] : []}
                     />
                     <Typography.Title level={5}>
                       Choose a thumbnail
                     </Typography.Title>
                     <ImgCrop rotationSlider>
                       <Upload
-
+                        // action="https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload"
                         listType="picture-card"
                         fileList={fileList}
                         onChange={onChange}
@@ -1301,6 +1373,16 @@ const LiveStream = () => {
                         {fileList.length < 5 && "+ Upload"}
                       </Upload>
                     </ImgCrop>
+                    <Typography.Title level={5}>Upload Video</Typography.Title>
+                    <Upload
+                      // action="https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload"
+                      listType="text"
+                      fileList={videoFileList}
+                      onChange={onVideoChange}
+                      beforeUpload={() => false}
+                    >
+                      <Button icon={<UploadOutlined />}>Select Video</Button>
+                    </Upload>
                   </div>
                 </Modal>
 
@@ -1361,7 +1443,6 @@ const LiveStream = () => {
                   </div>
                 </Modal>
               </div>
-
               <div className="container_main_right">
                 <div className="container_main_right_bottom">
                   <div className="container_main_right_bottom_top">
@@ -1370,9 +1451,7 @@ const LiveStream = () => {
                   <div className="container_main_right_bottom_bottom">
                     <List>
                       <VirtualList
-                        data={livestreamData.map((jsonString) =>
-                          JSON.parse(jsonString)
-                        )}
+                        data={livestreamData}
                         height={ContainerHeight}
                         itemHeight={47}
                         itemKey="_id"
@@ -1489,10 +1568,52 @@ const LiveStream = () => {
                 Discount list
               </div>
             </div>
+
+            <div className="container_center">
+              {listSchedule?.map((item, index) => (
+                <div
+                  onClick={() => {
+                    setStreamData(item);
+                    sessionStorage.setItem("liveId", item?.livestream_id?._id);
+                    setStreamId(item?.livestream_id?._id);
+                    connectSocket(item?.livestream_id?._id);
+                  }}
+                  key={index} className="container_center_item">
+                  <img
+
+                    src={item?.livestream_id?.thumbnail
+                    }
+                    style={{ cursor: 'pointer', width: "280px", borderRadius: 15, height: '100%' }}
+                    alt=""
+                  />
+                  <div className="container_center_item_time">
+                    <svg width="20" height="20" viewBox="0 0 18 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path fill-rule="evenodd" clip-rule="evenodd" d="M15.375 8.48419C16.5417 9.15776 16.5417 10.8417 15.375 11.5153L7.875 15.8454C6.70833 16.519 5.25 15.677 5.25 14.3299L5.25 5.6696C5.25 4.32245 6.70833 3.48048 7.875 4.15406L15.375 8.48419ZM14.625 10.2162C14.7917 10.12 14.7917 9.87945 14.625 9.78322L7.125 5.4531C6.95833 5.35687 6.75 5.47715 6.75 5.6696L6.75 14.3299C6.75 14.5223 6.95833 14.6426 7.125 14.5464L14.625 10.2162Z" fill="white" />
+                    </svg>
+
+                    2:36
+
+
+                  </div>
+                </div>
+              ))}
+
+              <div className="container_center_items">
+                <Button
+                  onClick={() => { showModal2() }}
+                  style={{
+                    width: '85px',
+                    height: '85px'
+                  }} icon={<PlusOutlined style={{ fontSize: 40 }} />} />
+              </div>
+            </div>
+
+
+
             <div className="container_bottom">
               <div className="container_bottom_left">
                 <div className="container_bottom_left_title">
-                  {streamData?.title}
+                  {streamData?.livestream_id?.title}
                 </div>
                 <div className="container_bottom_left_info">
                   <img
@@ -1659,4 +1780,4 @@ const LiveStream = () => {
   );
 };
 
-export default LiveStream;
+export default PreRecorded;

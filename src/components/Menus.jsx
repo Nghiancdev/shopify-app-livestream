@@ -5,6 +5,7 @@ import {
   SettingOutlined,
 } from "@ant-design/icons";
 import { Menu, Switch } from "antd";
+import { useNavigate } from "react-router-dom";
 const items = [
   {
     key: "sub1",
@@ -13,71 +14,18 @@ const items = [
     children: [
       {
         key: "1",
-        label: "Option 1",
+        label: "Livestream",
+        link: "/",
       },
       {
         key: "2",
-        label: "Option 2",
+        label: "Pre-record stream",
+        link: "/pre",
       },
       {
         key: "3",
-        label: "Option 3",
-      },
-      {
-        key: "4",
-        label: "Option 4",
-      },
-    ],
-  },
-  {
-    key: "sub2",
-    label: "Navigation Two",
-    icon: <AppstoreOutlined />,
-    children: [
-      {
-        key: "5",
-        label: "Option 5",
-      },
-      {
-        key: "6",
-        label: "Option 6",
-      },
-      {
-        key: "sub3",
-        label: "Submenu",
-        children: [
-          {
-            key: "7",
-            label: "Option 7",
-          },
-          {
-            key: "8",
-            label: "Option 8",
-          },
-        ],
-      },
-    ],
-  },
-  {
-    key: "sub4",
-    label: "Navigation Three",
-    icon: <SettingOutlined />,
-    children: [
-      {
-        key: "9",
-        label: "Option 9",
-      },
-      {
-        key: "10",
-        label: "Option 10",
-      },
-      {
-        key: "11",
-        label: "Option 11",
-      },
-      {
-        key: "12",
-        label: "Option 12",
+        label: "Analytic",
+        link: "/analytic",
       },
     ],
   },
@@ -85,12 +33,32 @@ const items = [
 const App = () => {
   const [theme, setTheme] = useState("dark");
   const [current, setCurrent] = useState("1");
+  const navigate = useNavigate();
   const changeTheme = (value) => {
     setTheme(value ? "dark" : "light");
   };
   const onClick = (e) => {
     console.log("click ", e);
     setCurrent(e.key);
+    const item = findItemByKey(items, e.key);
+    if (item && item.link) {
+      navigate(item.link);
+    }
+  };
+
+  const findItemByKey = (items, key) => {
+    for (const item of items) {
+      if (item.key === key) {
+        return item;
+      }
+      if (item.children) {
+        const childItem = findItemByKey(item.children, key);
+        if (childItem) {
+          return childItem;
+        }
+      }
+    }
+    return null;
   };
   return (
     <>
@@ -99,6 +67,7 @@ const App = () => {
         onClick={onClick}
         style={{
           backgroundColor: "#EBEBEB",
+          width: 200,
         }}
         defaultOpenKeys={["sub1"]}
         selectedKeys={[current]}

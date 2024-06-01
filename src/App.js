@@ -2,9 +2,10 @@ import logo from "./logo.svg";
 import "./App.css";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import LiveStream from "./pages/LiveStream/LiveStream";
-import PreRecorded from "./pages/PreRecorded";
-import Analytic from "./pages/Analytic";
+import PreRecorded from "./pages/PreRecorded/PreRecorded";
+
 import Auth from "./pages/Auth";
+import Analytic from "./pages/Analystic/Analytic";
 function App() {
   return (
     <Router>
